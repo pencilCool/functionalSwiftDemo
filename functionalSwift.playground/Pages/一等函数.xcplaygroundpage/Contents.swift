@@ -88,9 +88,4 @@ extension Ship {
     }
 }
 
-// 这里用到的函数都是自由函数，我们可以将Region 定义为：
-struct Region2 {
-    let lookup:(Position) -> Bool
-}
-// 然后用extension 的方法来定义
 print("end")

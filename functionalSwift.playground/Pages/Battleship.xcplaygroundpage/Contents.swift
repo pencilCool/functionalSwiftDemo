@@ -4,6 +4,7 @@ import UIKit
 
 var str = "Battleship"
 
+
 typealias Distance = Double
 
 struct Position {
@@ -11,12 +12,14 @@ struct Position {
     var y: Double
 }
 
+// 定义区域
 extension Position {
     func within(range: Distance) -> Bool {
         return sqrt(x * x +  y * y) <= range
     }
 }
 
+// 定义船只 ：位置，射程，安全距离（太近了会伤到自己）,
 struct Ship {
     var position: Position
     var firingRange: Distance
@@ -69,7 +72,7 @@ extension Position {
         return Position(x: x - p.x, y: y - p.y)
     }
     
-    var lenght: Double {
+    var length: Double {
         return sqrt(x * x + y * y)
     }
     
@@ -79,8 +82,8 @@ extension Position {
 // 利用工具函数（求两点之间的向量，和距离）来简化函数
 extension Ship {
     func canSafelyEngage2(ship target: Ship,friendly: Ship) -> Bool {
-        let targetDistance = target.position.minus(position).lenght
-        let friendlyDistance = friendly.position.minus(target.position).lenght
+        let targetDistance = target.position.minus(position).length
+        let friendlyDistance = friendly.position.minus(target.position).length
         return targetDistance <= firingRange
             && targetDistance > unsafeRange
             && (friendlyDistance > unsafeRange)
@@ -88,4 +91,50 @@ extension Ship {
 }
 // 现在代码比之前的简单多了，但是我们还想声明的方式来明确现有的问题
 
+typealias  Region = (Position) -> Bool
 
+// circle center in original
+func cirlce(radius:Distance) -> Region {
+    return {point in point.length <= radius}
+}
+
+// circle center not in original
+func cirle2(radius:Distance,center:Position) -> Region {
+    return {point in point.minus(center).length <= radius}
+}
+
+func shift(_ region:@escaping Region,by offset:Position) -> Region {
+    return {point in region(point.minus(offset))}
+}
+
+func invert(_ region:@escaping Region) -> Region {
+    return {point in !region(point)}
+}
+
+func interset(_ region:@escaping Region,with other:@escaping Region) -> Region {
+    return {point in region(point) && other(point)}
+}
+
+func union(_ region:@escaping Region,with other:@escaping Region) -> Region {
+    return {point in region(point) || other(point)}
+}
+
+func subtract(_ region:@escaping Region,from original:@escaping Region) -> Region {
+    return interset(original, with: invert(original))
+}
+
+
+extension Ship {
+    func canSafelyEngage3(ship target: Ship,friendly: Ship) -> Bool {
+        let rangeRegion = subtract(cirlce(radius: unsafeRange), from: cirlce(radius: firingRange))
+        let firingRegion = shift(rangeRegion, by: position)
+        let friendlyRegion = shift(cirlce(radius: unsafeRange), by: friendly.position)
+        let resultRegion = subtract(friendlyRegion, from: firingRegion)
+        return resultRegion(target.position)
+        
+    }
+}
+
+struct Region2 {
+    let lookup:(Position) -> Bool
+}
