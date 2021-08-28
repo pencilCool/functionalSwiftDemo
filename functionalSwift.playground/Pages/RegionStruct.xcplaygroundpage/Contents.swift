@@ -56,11 +56,13 @@ extension Region
     // 定义一个圆形
     func cicrle(radius: Distance) -> Region {
         let mylookup:(Position) -> Bool =  {point in  point.lenght <= radius } // 编译器知道point 类型是 Position
+        return Region.init(lookup: mylookup)
     }
 
     // 传入一个函数，然后对它的参数进行处理，返回就成了一个新的函数了。
     func shift( _ region: @escaping Region, by offset: Position) -> Region {
-        return {point in region(point.minus(offset))}
+        let mylookup = {point in Region(point.minus(offset))}
+        return Region.init(lookup: mylookup)
     }
 
     // 我们创建一个圆心为在（5，5） 半径为 10的 圆
