@@ -39,17 +39,15 @@ struct Region {
     let lookup: (Position) -> Bool
 }
 
-extension Region
-{
+extension Region {
     func shift(by offset: Position) -> Region {
         let mylookup:(Position)->Bool = {
             p in
             self.lookup(p.minus(offset))
         }
         
-        var result = Region(lookup: mylookup)
+        let result = Region(lookup: mylookup)
         return result;
-    
     }
     
     
@@ -59,42 +57,42 @@ extension Region
         return Region.init(lookup: mylookup)
     }
 
-    // 传入一个函数，然后对它的参数进行处理，返回就成了一个新的函数了。
-    func shift( _ region: @escaping Region, by offset: Position) -> Region {
-        let mylookup = {point in Region(point.minus(offset))}
-        return Region.init(lookup: mylookup)
-    }
-
-    // 我们创建一个圆心为在（5，5） 半径为 10的 圆
-    let shifted = shift(cicrle(radius: 10), by: Position(x:5,y:5))
 
 
     // 两个区域的交际和并集，差集
-    func interset(_ region: @escaping Region, with other: @escaping Region) -> Region
-    {
-    return { point in region(point) && other(point)}
+    func interset(  other:Region) -> Region {
+        let mylookup:(Position)->Bool = {
+            p in
+            return self.lookup(p) && other.lookup(p)
+        }
+        
+        return Region(lookup: mylookup)
     }
 
-    func union( _ region: @escaping Region, with other: @escaping Region) -> Region
-    {
-        return { point in region(point) || other(point)}
+    func union(_ other:Region) -> Region {
+        let mylookup:(Position)->Bool = {
+            p in
+            self.lookup(p) || other.lookup(p)
+        }
+        
+        return Region(lookup: mylookup)
     }
 
     // 区域外面
-    func invert(_ region: @escaping Region) -> Region
-    {
-        return {point in !region(point) }
+    func invert() -> Region {
+        let mylookup:(Position)->Bool = {
+            p in
+            return !self.lookup(p)
+        }
         
+        return Region(lookup: mylookup)
     }
 
-    func subtract( _ region: @escaping Region,
-                   from original :@escaping Region) -> Region
-    {
-        return interset(original, with: invert(region))
+    func subtract( _ region:Region) -> Region {
+        return self.interset(other: region.invert())
     }
+    
 
 }
 
 print("doubt")
-
-// Doubt
